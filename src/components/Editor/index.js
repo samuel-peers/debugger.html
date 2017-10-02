@@ -47,6 +47,7 @@ import EmptyLines from "./EmptyLines";
 import {
   showSourceText,
   updateDocument,
+  showLoading,
   shouldShowFooter,
   clearLineClass,
   createEditor,
@@ -423,9 +424,13 @@ class Editor extends PureComponent {
     const { selectedLocation, jumpToMappedLocation } = this.props;
 
     if (e.metaKey && e.altKey) {
-      const sourceLocation = getSourceLocationFromMouseEvent(this.state.editor, selectedLocation, e);
+      const sourceLocation = getSourceLocationFromMouseEvent(
+        this.state.editor,
+        selectedLocation,
+        e
+      );
       jumpToMappedLocation(sourceLocation);
-   }
+    }
   }
 
   toggleConditionalPanel(line) {
@@ -535,7 +540,7 @@ class Editor extends PureComponent {
     }
 
     if (!isLoaded(nextProps.selectedSource.toJS())) {
-      return this.showMessage(L10N.getStr("loadingText"));
+      return showLoading(this.state.editor);
     }
 
     if (nextProps.selectedSource.get("error")) {
@@ -552,9 +557,6 @@ class Editor extends PureComponent {
       return;
     }
 
-    this.state.editor.replaceDocument(this.state.editor.createDocument());
-    this.state.editor.setText(msg);
-    this.state.editor.setMode({ name: "text" });
     resetLineNumberFormat(this.state.editor);
   }
 
@@ -707,13 +709,12 @@ class Editor extends PureComponent {
   }
 
   render() {
-    const { coverageOn, pauseData } = this.props;
+    const { coverageOn } = this.props;
 
     return (
       <div
         className={classnames("editor-wrapper", {
-          "coverage-on": coverageOn,
-          paused: !!pauseData && isEnabled("highlightScopeLines")
+          "coverage-on": coverageOn
         })}
       >
         {this.renderSearchBar()}

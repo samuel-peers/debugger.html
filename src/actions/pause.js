@@ -5,11 +5,12 @@ import { PROMISE } from "../utils/redux/middleware/promise";
 
 import {
   getPause,
+  pausedInEval,
   getLoadedObject,
   isStepping,
   isPaused,
   getSelectedSource,
-  hasWatchExpressionErrored
+  isEvaluatingExpression
 } from "../selectors";
 import {
   updateFrameLocations,
@@ -58,12 +59,14 @@ export function resumed() {
       return;
     }
 
+    const wasPausedInEval = pausedInEval(getState());
+
     dispatch({
       type: "RESUME",
       value: undefined
     });
 
-    if (!isStepping(getState())) {
+    if (!isStepping(getState()) && !wasPausedInEval) {
       dispatch(evaluateExpressions());
     }
   };
@@ -122,9 +125,7 @@ export function paused(pauseInfo: Pause) {
       dispatch(removeBreakpoint(hiddenBreakpointLocation));
     }
 
-    // NOTE: We don't want to re-evaluate watch expressions
-    // if we're paused due to an excpression exception #3597
-    if (!hasWatchExpressionErrored(getState())) {
+    if (!isEvaluatingExpression(getState())) {
       dispatch(evaluateExpressions());
     }
 
